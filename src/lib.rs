@@ -53,8 +53,23 @@ mod solarix {
 
         }
 
-        pub fn create_fractionalized_asset(&mut self) {
-            todo!()
+        // Not tested, please check.
+        pub fn create_fractionalized_asset(&mut self, owner: ComponentAddress,  pricePerNft: Decimal, totalSupply: u64) -> u64 { {
+            let id = self._get_next_id_and_increment();
+            let (panel, nft_bucket) = Panel::new(id, owner, pricePerNft, totalSupply);
+            self.non_fungible_vaults.insert(id, NonFungibleVault::with_bucket(nft_bucket));
+            self.panels.insert(id, panel);
+            self.earnings_vaults_map.insert(id, HashMap::new());
+            self.panels.get(&id).unwrap().price_per_nft;
+
+            // initialise an earnings vault for every localid? Maybe gas inefficient.  
+
+            let total_supply = self.panels.get(&id).unwrap().total_supply;
+            for i in 0..total_supply {
+                let local_id = NonFungibleLocalId::integer(i);
+                self.earnings_vaults_map.get_mut(&id).unwrap().insert(local_id, Vault::new(XRD));
+            }
+            id
         }
 
         fn _get_next_id_and_increment(&mut self) -> u64 {
