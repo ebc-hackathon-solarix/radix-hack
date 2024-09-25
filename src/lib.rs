@@ -38,7 +38,9 @@ mod solarix {
                 })
                 .mint_initial_supply([(1.into(), {})]);
 
-                let solarix: Global<Solarix> = Self {
+            let admin_rule = rule!(require(admin_badge.resource_address()));
+
+            let solarix: Global<Solarix> = Self {
                     non_fungible_vaults: HashMap::new(),
                     panels: HashMap::new(),
                     earnings_vaults_map: HashMap::new(),
@@ -48,10 +50,10 @@ mod solarix {
                     id_counter: 0
                 }
                 .instantiate()
-                .prepare_to_globalize(OwnerRole::None)
+                .prepare_to_globalize(OwnerRole::Fixed(admin_rule))
                 .globalize();
     
-                (solarix, admin_badge)
+            (solarix, admin_badge)
 
         }
 
