@@ -24,11 +24,13 @@ mod solarix {
         payout_vaults: HashMap<ComponentAddress, Vault>, // Maps accounts to their respective payout vaults
         protocol_collected_fees: Vault, // Vault containing fees collected by the protocol
         admin_badge_address: ResourceAddress,
-        id_counter: u64
+        id_counter: u64,
+        buy_nft_fee: Decimal, // fee to be applied when buying 
+        earnings_fee: Decimal, // fee to be applied to the amount being deposited as earnings
     }
 
     impl Solarix {
-        pub fn instantiate() -> (Global<Solarix>, NonFungibleBucket) {
+        pub fn instantiate(buy_nft_fee: Decimal, earnings_fee: Decimal) -> (Global<Solarix>, NonFungibleBucket) {
             let admin_badge = ResourceBuilder::new_integer_non_fungible(OwnerRole::None)
                 .metadata(metadata! {
                     init {
@@ -47,7 +49,9 @@ mod solarix {
                     payout_vaults: HashMap::new(),
                     protocol_collected_fees: Vault::new(XRD),
                     admin_badge_address: admin_badge.resource_address(),
-                    id_counter: 0
+                    id_counter: 0,
+                    buy_nft_fee,
+                    earnings_fee
                 }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::Fixed(admin_rule))
@@ -96,8 +100,13 @@ mod solarix {
             assert!(nfts_ids.len().to_u32().unwrap() >= quantity, "Not enough NFTs to buy");
 
             let payout_vault: &mut Vault = self.payout_vaults.get_mut(&_panel.payment_receiver).unwrap();
-            let coins_to_pay: Bucket = payment.take(_panel.price_per_nft * quantity);
+            let mut coins_to_pay: Bucket = payment.take(_panel.price_per_nft * quantity);
             let nft = vault.take_non_fungibles(&nfts_ids);
+
+            let accrued_fee = coins_to_pay.amount() * self.buy_nft_fee;
+            let accrued_bucket = coins_to_pay.take(accrued_fee);
+
+            self.protocol_collected_fees.put(accrued_bucket);
 
             payout_vault.put(coins_to_pay);
             let earnings_vault_map: &mut std::collections::HashMap<NonFungibleLocalId, Vault> = self.earnings_vaults_maps.get_mut(&panel_id).unwrap();
@@ -111,6 +120,9 @@ mod solarix {
 
         pub fn deposit_earnings(&mut self, panel_id: u64, mut earnings: Bucket) {
             assert!(self.non_fungible_vaults.get(&panel_id).unwrap().is_empty(), "Non fungible vault not empty, NFTs must be purchased before earnings can be deposited");
+
+            let accrued_fee_amount = earnings.amount() * self.earnings_fee;
+            self.protocol_collected_fees.put(earnings.take(accrued_fee_amount));
 
             let vault_map = self.earnings_vaults_maps.get_mut(&panel_id).unwrap();
             let entries_number: u32 = vault_map.len().to_u32().unwrap();
