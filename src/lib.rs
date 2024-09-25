@@ -53,13 +53,17 @@ mod solarix {
 
         }
 
-        // Not tested, please check.
-        pub fn create_fractionalized_asset(&mut self, owner: ComponentAddress,  pricePerNft: Decimal, totalSupply: u64) -> u64 { {
+
+        pub fn create_fractionalized_asset(&mut self,payment_address: ComponentAddress, pricePerNft: Decimal, totalSupply: u64) -> u64  {
             let id = self._get_next_id_and_increment();
-            let (panel, nft_bucket) = Panel::new(id, owner, pricePerNft, totalSupply);
+            self.earnings_vaults_map.insert(id, HashMap::new());
+            // payment_receiver is going to be a separate component.(in panel there is one payment address but in lib there are many for all the different local ids) One address is given but earnings_vaults_map maps ids to localids to vaults.
+            let (panel, nft_bucket, panel_owner_badge) = Panel::new(id, payment_address, pricePerNft, totalSupply);
+
+            self.payout_vaults.insert(payment_address, Vault::new(XRD));
             self.non_fungible_vaults.insert(id, NonFungibleVault::with_bucket(nft_bucket));
             self.panels.insert(id, panel);
-            self.earnings_vaults_map.insert(id, HashMap::new());
+            
             self.panels.get(&id).unwrap().price_per_nft;
 
             // initialise an earnings vault for every localid? Maybe gas inefficient.  
@@ -83,6 +87,9 @@ mod solarix {
         }
 
         pub fn deposit_earnings(&mut self) {
+            
+
+
             todo!()
         }
 
@@ -90,7 +97,8 @@ mod solarix {
             todo!()
         }
 
-        pub fn claim_sales_proceeds(&mut self) {
+        pub fn claim_sales_proceeds(&mut self, panel_id: u64) {
+
             todo!()
         }
     }
