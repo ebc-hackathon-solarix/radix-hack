@@ -9,7 +9,7 @@ pub struct NFTData {
 #[blueprint]
 mod panel {
   struct Panel {
-    pub total_supply: u64,
+    pub total_supply: u32,
     payment_receiver: ComponentAddress,
     pub price_per_nft: Decimal,
     pub panel_id: u64,
@@ -17,7 +17,13 @@ mod panel {
   }
 
   impl Panel {
-    pub fn new() -> (Panel, Bucket) {
+    pub fn new(
+      id: u64,
+      panel_owner_address: ComponentAddress,
+      price_per_nft: Decimal,
+      supply: u32
+    ) -> (Panel, Bucket) {
+      
       
     }
   }
