@@ -10,7 +10,7 @@ pub struct NFTData {
 mod panel {
   struct Panel {
     pub total_supply: u64,
-    payment_receiver: ComponentAddress,
+    pub payment_receiver: ComponentAddress,
     pub price_per_nft: Decimal,
     pub panel_id: u64,
     pub nft_resource_address: ResourceAddress

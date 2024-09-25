@@ -1,3 +1,4 @@
+use scrypto::math::Decimal;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -13,8 +14,8 @@ pub enum MyError {
 
     #[error("Insufficient token amount: expected {expected}, found {found}")]
     InsufficientTokenAmount {
-        expected: u32,
-        found: u32,
+        expected: Decimal,
+        found: Decimal,
     },
 
     #[error("Not enough supply. You requested to purchase {requested} but only {available} is available")]

@@ -1,7 +1,9 @@
 mod panel;
+mod errors;
 
 use scrypto::prelude::*;
 use crate::panel::panel::Panel;
+use crate::errors::MyError;
 
 #[blueprint]
 mod solarix {
@@ -53,27 +55,20 @@ mod solarix {
 
         }
 
-
-        pub fn create_fractionalized_asset(&mut self,payment_address: ComponentAddress, pricePerNft: Decimal, totalSupply: u64) -> u64  {
-            let id = self._get_next_id_and_increment();
-            self.earnings_vaults_map.insert(id, HashMap::new());
-            // payment_receiver is going to be a separate component.(in panel there is one payment address but in lib there are many for all the different local ids) One address is given but earnings_vaults_map maps ids to localids to vaults.
-            let (panel, nft_bucket, panel_owner_badge) = Panel::new(id, payment_address, pricePerNft, totalSupply);
-
-            self.payout_vaults.insert(payment_address, Vault::new(XRD));
-            self.non_fungible_vaults.insert(id, NonFungibleVault::with_bucket(nft_bucket));
-            self.panels.insert(id, panel);
-            
-            self.panels.get(&id).unwrap().price_per_nft;
-
-            // initialise an earnings vault for every localid? Maybe gas inefficient.  
-
-            let total_supply = self.panels.get(&id).unwrap().total_supply;
-            for i in 0..total_supply {
-                let local_id = NonFungibleLocalId::integer(i);
-                self.earnings_vaults_map.get_mut(&id).unwrap().insert(local_id, Vault::new(XRD));
-            }
-            id
+        // Not tested, please check.
+        pub fn create_fractionalized_asset(&mut self, owner_address: ComponentAddress, price_per_nft: Decimal, total_supply: u64) -> u64 {
+            let panel_id = self._get_next_id_and_increment();
+            let (_panel, nft_bucket, _panel_owner_badge) = Panel::new(
+                panel_id,
+                owner_address,
+                price_per_nft,
+                total_supply
+            );
+            self.non_fungible_vaults.insert(panel_id, NonFungibleVault::with_bucket(nft_bucket));
+            self.panels.insert(panel_id, _panel);
+            self.earnings_vaults_map.insert(panel_id, HashMap::new());
+            self.payout_vaults.insert(owner_address, Vault::new(XRD));
+            panel_id
         }
 
         fn _get_next_id_and_increment(&mut self) -> u64 {
@@ -82,14 +77,37 @@ mod solarix {
             id
         }
 
-        pub fn buy_nft(&mut self) {
-            todo!()
+        pub fn buy_nft(&mut self, panel_id: u64, quantity: u32, mut payment: Bucket) -> Result<(NonFungibleBucket, Bucket), MyError> {
+            assert!(self.panels.contains_key(&panel_id), "Asset not found");
+            let _panel = self.panels.get(&panel_id).unwrap();
+            let vault: &mut NonFungibleVault = self.non_fungible_vaults.get_mut(&panel_id).unwrap();
+
+            if payment.amount() >= (_panel.price_per_nft * quantity) {
+                let expected = _panel.price_per_nft * quantity;
+                return Err(MyError::InsufficientTokenAmount { expected, found: payment.amount() });
+            }
+
+            assert!(!vault.is_empty(), "Non fungible vault is empty");
+
+            let nfts_ids = vault.as_non_fungible().non_fungible_local_ids(quantity);
+
+            assert!(nfts_ids.len().to_u32().unwrap() >= quantity, "Not enough NFTs to buy");
+
+            let payout_vault: &mut Vault = self.payout_vaults.get_mut(&_panel.payment_receiver).unwrap();
+            let coins_to_pay: Bucket = payment.take(_panel.price_per_nft * quantity);
+            let nft = vault.take_non_fungibles(&nfts_ids);
+
+            payout_vault.put(coins_to_pay);
+            let earnings_vault_map: &mut std::collections::HashMap<NonFungibleLocalId, Vault> = self.earnings_vaults_map.get_mut(&panel_id).unwrap();
+
+            nfts_ids.iter().for_each(|nft_id| {
+                earnings_vault_map.insert(nft_id.clone(), Vault::new(XRD));
+            });
+
+            Ok((nft, payment))
         }
 
         pub fn deposit_earnings(&mut self) {
-            
-
-
             todo!()
         }
 
@@ -98,7 +116,6 @@ mod solarix {
         }
 
         pub fn claim_sales_proceeds(&mut self, panel_id: u64) {
-
             todo!()
         }
     }
