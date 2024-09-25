@@ -1,3 +1,5 @@
+mod panel;
+
 use scrypto::prelude::*;
 
 #[blueprint]

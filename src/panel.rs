@@ -3,13 +3,13 @@ use scrypto::prelude::*;
 #[derive(ScryptoSbor, NonFungibleData)]
 pub struct NFTData {
   name: String,
-  asset_id: u32,
+  asset_id: u64,
 }
 
 #[blueprint]
 mod panel {
   struct Panel {
-    pub total_supply: u32,
+    pub total_supply: u64,
     payment_receiver: ComponentAddress,
     pub price_per_nft: Decimal,
     pub panel_id: u64,
@@ -21,10 +21,26 @@ mod panel {
       id: u64,
       panel_owner_address: ComponentAddress,
       price_per_nft: Decimal,
-      supply: u32
-    ) -> (Panel, Bucket) {
-      
-      
+      supply: u64
+    ) -> (Panel, NonFungibleBucket) {
+      let nft_bucket = ResourceBuilder::new_integer_non_fungible(OwnerRole::None)
+        .metadata(metadata! {
+          init {
+            "name" => format!("Panel #{} NFT", id), locked;
+            "description" => "A non-fungible token representing ownership of a panel in the solarix system.", locked;
+          }
+        })
+        .mint_initial_supply((0..supply).map(|nft_id: u64| (nft_id.into(), NFTData { name: format!("Panel #{} NFT", id), asset_id: id })));
+
+      let panel = Self {
+        total_supply: supply,
+        payment_receiver: panel_owner_address,
+        price_per_nft,
+        panel_id: id,
+        nft_resource_address: nft_bucket.resource_address()
+      };
+
+      (panel, nft_bucket)
     }
   }
 }
