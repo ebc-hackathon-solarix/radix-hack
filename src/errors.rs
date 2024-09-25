@@ -1,7 +1,7 @@
-use scrypto::math::Decimal;
+use scrypto::prelude::*;
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(ScryptoSbor, Error, Debug)]
 pub enum MyError {
     #[error("An error occurred: {0}")]
     GeneralError(String),
