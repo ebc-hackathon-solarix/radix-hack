@@ -47,7 +47,7 @@ mod solarix {
 
         }
 
-        fn getNextIdAndIncrement(&mut self) -> u64 {
+        fn _get_next_id_and_increment(&mut self) -> u64 {
             let id = self.id_counter;
             self.id_counter += 1;
             id
@@ -66,7 +66,7 @@ mod solarix {
 
         }
 
-        pub fn claim_payout() {
+        pub fn claim_sales_proceeds() {
 
         }
     }
