@@ -20,7 +20,7 @@ mod solarix {
     struct Solarix {
         non_fungible_vaults: HashMap<u64, NonFungibleVault>, // Maps panel ids to non fungible vaults containing their NFTs
         panels: HashMap<u64, Panel>, // Maps panel ids to their respective panel struct
-        earnings_vaults_map: HashMap<u64, HashMap<NonFungibleLocalId, Vault>>, // Maps panel ids to their respective earnings vaults
+        earnings_vaults_maps: HashMap<u64, HashMap<NonFungibleLocalId, Vault>>, // Maps panel ids to their respective earnings vaults
         payout_vaults: HashMap<ComponentAddress, Vault>, // Maps accounts to their respective payout vaults
         protocol_collected_fees: Vault, // Vault containing fees collected by the protocol
         admin_badge_address: ResourceAddress,
@@ -43,7 +43,7 @@ mod solarix {
             let solarix: Global<Solarix> = Self {
                     non_fungible_vaults: HashMap::new(),
                     panels: HashMap::new(),
-                    earnings_vaults_map: HashMap::new(),
+                    earnings_vaults_maps: HashMap::new(),
                     payout_vaults: HashMap::new(),
                     protocol_collected_fees: Vault::new(XRD),
                     admin_badge_address: admin_badge.resource_address(),
@@ -68,7 +68,7 @@ mod solarix {
             );
             self.non_fungible_vaults.insert(panel_id, NonFungibleVault::with_bucket(nft_bucket));
             self.panels.insert(panel_id, _panel);
-            self.earnings_vaults_map.insert(panel_id, HashMap::new());
+            self.earnings_vaults_maps.insert(panel_id, HashMap::new());
             self.payout_vaults.insert(owner_address, Vault::new(XRD));
             panel_id
         }
@@ -100,7 +100,7 @@ mod solarix {
             let nft = vault.take_non_fungibles(&nfts_ids);
 
             payout_vault.put(coins_to_pay);
-            let earnings_vault_map: &mut std::collections::HashMap<NonFungibleLocalId, Vault> = self.earnings_vaults_map.get_mut(&panel_id).unwrap();
+            let earnings_vault_map: &mut std::collections::HashMap<NonFungibleLocalId, Vault> = self.earnings_vaults_maps.get_mut(&panel_id).unwrap();
 
             nfts_ids.iter().for_each(|nft_id| {
                 earnings_vault_map.insert(nft_id.clone(), Vault::new(XRD));
@@ -109,12 +109,28 @@ mod solarix {
             Ok((nft, payment))
         }
 
-        pub fn deposit_earnings(&mut self) {
-            todo!()
+        pub fn deposit_earnings(&mut self, panel_id: u64, mut earnings: Bucket) {
+            assert!(self.non_fungible_vaults.get(&panel_id).unwrap().is_empty(), "Non fungible vault not empty, NFTs must be purchased before earnings can be deposited");
+
+            let vault_map = self.earnings_vaults_maps.get_mut(&panel_id).unwrap();
+            let entries_number: u32 = vault_map.len().to_u32().unwrap();
+            let amount_to_deposit = earnings.amount() / entries_number;
+
+            vault_map.iter_mut().for_each(|(_nft_id, vault)| {
+                vault.put(earnings.take(amount_to_deposit));
+            });
         }
 
-        pub fn claim_earnings(&mut self) {
-            todo!()
+        pub fn claim_earnings(&mut self, panel_id: u64, nft_proof: NonFungibleProof) -> Bucket {
+            assert!(self.panels.contains_key(&panel_id), "Asset not found");
+
+            let asset = self.panels.get(&panel_id).unwrap();
+            let checked_nft: CheckedNonFungibleProof = nft_proof.check_with_message(asset.nft_resource_address, "Invalid proof");
+
+            let vault_map = self.earnings_vaults_maps.get_mut(&panel_id).unwrap();
+            let vault: &mut Vault = vault_map.get_mut(&checked_nft.non_fungible_local_id()).unwrap();
+
+            vault.take_all()
         }
 
         pub fn claim_sales_proceeds(&mut self, account: Global<Account>) -> Bucket {
