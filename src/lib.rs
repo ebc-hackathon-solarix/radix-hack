@@ -117,8 +117,11 @@ mod solarix {
             todo!()
         }
 
-        pub fn claim_sales_proceeds(&mut self, panel_id: u64) {
-            todo!()
+        pub fn claim_sales_proceeds(&mut self, account: Global<Account>) -> Bucket {
+            Runtime::assert_access_rule(account.get_owner_role().rule);
+            assert!(self.payout_vaults.contains_key(&account.address()), "NOT ALLOWED TO CLAIM PAYOUT");
+            let vault = self.payout_vaults.get_mut(&account.address()).unwrap();
+            vault.take_all()
         }
     }
 }
