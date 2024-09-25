@@ -8,7 +8,7 @@ mod solarix {
     enable_method_auth! {
         methods {
             buy_nft => PUBLIC;
-            claim_payout => PUBLIC;
+            claim_sales_proceeds => PUBLIC;
             create_fractionalized_asset => restrict_to: [OWNER];
             deposit_earnings => restrict_to: [OWNER];
             claim_earnings => PUBLIC;
