@@ -5,6 +5,16 @@ use crate::panel::panel::Panel;
 
 #[blueprint]
 mod solarix {
+    enable_method_auth! {
+        methods {
+            buy_nft => PUBLIC;
+            claim_payout => PUBLIC;
+            create_fractionalized_asset => restrict_to: [OWNER];
+            deposit_earnings => restrict_to: [OWNER];
+            claim_earnings => PUBLIC;
+        }
+    }
+
     struct Solarix {
         non_fungible_vaults: HashMap<u64, NonFungibleVault>, // Maps panel ids to non fungible vaults containing their NFTs
         panels: HashMap<u64, Panel>, // Maps panel ids to their respective panel struct
@@ -43,8 +53,8 @@ mod solarix {
 
         }
 
-        pub fn create_fractionalized_asset() {
-
+        pub fn create_fractionalized_asset(&mut self) {
+            todo!()
         }
 
         fn getNextIdAndIncrement(&mut self) -> u64 {
@@ -53,21 +63,20 @@ mod solarix {
             id
         }
 
-
-        pub fn buy_nft() {
-
+        pub fn buy_nft(&mut self) {
+            todo!()
         }
 
-        pub fn deposit_earnings() {
-
+        pub fn deposit_earnings(&mut self) {
+            todo!()
         }
 
-        pub fn claim_earnings() {
-
+        pub fn claim_earnings(&mut self) {
+            todo!()
         }
 
-        pub fn claim_payout() {
-
+        pub fn claim_payout(&mut self) {
+            todo!()
         }
     }
 }
