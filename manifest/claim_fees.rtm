@@ -1,22 +1,16 @@
 CALL_METHOD
     Address("your account")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1n2m7yp6rnwvgnl4pjx0s8gzasqlsn3r890rdcy8j5h2dq2ve98sps9")
+    Address("admin badge resource")
     Array<NonFungibleLocalId>(
-        NonFungibleLocalId("#19#")
+        NonFungibleLocalId("#1#")
     )
 ;
-
-POP_FROM_AUTH_ZONE
-    Proof("claim_badge_proof")
-;
-
 CALL_METHOD
     Address("component_tdx_2_1cp5dterg3fukyq6zuf0xg3wwlu9q97cp689eq6rc50dc92qt2h88kc")
-    "claim_earnings"
-    0u64
-    Proof("claim_badge_proof")
+    "claim_fees"
 ;
+
 CALL_METHOD
     Address("your account")
     "try_deposit_batch_or_refund"

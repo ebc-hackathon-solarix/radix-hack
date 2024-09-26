@@ -50,23 +50,23 @@ create_fractionalized_asset() {
 instantiate
 create_fractionalized_asset
 
-echo "Starting buy_nft"
-# account 1 buys 1
-result=$(resim call-method $component buy_nft 0 5 $XRD:3000)
+# echo "Starting buy_nft"
+# # account 1 buys 1
+# result=$(resim call-method $component buy_nft 0 5 $XRD:3000)
 
-resim set-default-account $account2 $account2_priv_key $account2_owner_badge
+# resim set-default-account $account2 $account2_priv_key $account2_owner_badge
 
-# account 2 buys 14
-result=$(resim call-method $component buy_nft 0 10 $XRD:9500)
+# # account 2 buys 14
+# result=$(resim call-method $component buy_nft 0 10 $XRD:9500)
 
-resim show $account2
+# resim show $account2
 
-# claim payout
-result=$(resim call-method $component claim_sales_proceeds $account2)
+# # claim payout
+# result=$(resim call-method $component claim_sales_proceeds $account2)
 
-resim show $account2
+# resim show $account2
 
-resim set-default-account $account $account_priv_key $account_owner_badge
+# resim set-default-account $account $account_priv_key $account_owner_badge
 
-resim call-method $component deposit_earnings 0 $XRD:5000 --proofs $admin_badge_resource_address:#1#
+# resim call-method $component deposit_earnings 0 $XRD:5000 --proofs $admin_badge_resource_address:#1#
 

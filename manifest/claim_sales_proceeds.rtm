@@ -1,15 +1,22 @@
 CALL_METHOD
-    Address("component_sim1cptxxxxxxxxxfaucetxxxxxxxxx000527798379xxxxxxxxxhkrefh")
-    "lock_fee"
-    Decimal("5000")
+    Address("your account")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkj306h7vgv3gl6zzmvlkcn64qmlyun23ds0rec4ykgrmczvzryy6")
+    Array<NonFungibleLocalId>(
+        NonFungibleLocalId("#1#")
+    )
+;
+POP_FROM_AUTH_ZONE
+    Proof("claim_badge_proof")
 ;
 CALL_METHOD
-    Address("component_sim1cr4y0gjxcsj5kukswz0w0zqq653mhr8232yahwyc4q29p27sppwk9t")
+    Address("component_tdx_2_1cp5dterg3fukyq6zuf0xg3wwlu9q97cp689eq6rc50dc92qt2h88kc")
     "claim_sales_proceeds"
-    Address("account_sim1c83r6qw6jsqq2dw37l0uhf0ndp87qw27t6x8p53k0h3e2v2ea2mekw")
+    0u64
+    Proof("claim_badge_proof")
 ;
 CALL_METHOD
-    Address("account_sim1c83r6qw6jsqq2dw37l0uhf0ndp87qw27t6x8p53k0h3e2v2ea2mekw")
+    Address("your account")
     "try_deposit_batch_or_refund"
     Expression("ENTIRE_WORKTOP")
     Enum<0u8>()

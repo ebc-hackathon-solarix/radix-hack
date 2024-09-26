@@ -22,7 +22,16 @@ mod panel {
       payment_receiver: ComponentAddress,
       price_per_nft: Decimal,
       supply: u64
-    ) -> (Panel, NonFungibleBucket) {
+    ) -> (Panel, NonFungibleBucket, NonFungibleBucket) {
+      let panel_owner_badge = ResourceBuilder::new_integer_non_fungible(OwnerRole::None)
+        .metadata(metadata! {
+          init {
+            "name" => "Panel Owner Badge", locked;
+            "description" => "A non-fungible token representing ownership of a panel. Needed to redeem sales proceeds", locked;
+          }
+        })
+        .mint_initial_supply([(1.into(), {})]);
+
       let nft_bucket = ResourceBuilder::new_integer_non_fungible(OwnerRole::None)
         .metadata(metadata! {
           init {
@@ -40,7 +49,7 @@ mod panel {
         nft_resource_address: nft_bucket.resource_address()
       };
 
-      (panel, nft_bucket)
+      (panel, nft_bucket, panel_owner_badge)
     }
   }
 }

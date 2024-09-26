@@ -1,28 +1,23 @@
 CALL_METHOD
-    Address("component_sim1cptxxxxxxxxxfaucetxxxxxxxxx000527798379xxxxxxxxxhkrefh")
-    "lock_fee"
-    Decimal("5000")
-;
-CALL_METHOD
-    Address("account_sim1c83r6qw6jsqq2dw37l0uhf0ndp87qw27t6x8p53k0h3e2v2ea2mekw")
+    Address("account_tdx_2_128ykyg4ty8qqtlv5m0u2kd0te6f447q57ryvqsd2ewjethjam8vw9s")
     "withdraw"
-    Address("resource_sim1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxakj8n3")
-    Decimal("6000")
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Decimal("2500")
 ;
 TAKE_FROM_WORKTOP
-    Address("resource_sim1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxakj8n3")
-    Decimal("6000")
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Decimal("2500")
     Bucket("bucket1")
 ;
 CALL_METHOD
-    Address("component_sim1cr4y0gjxcsj5kukswz0w0zqq653mhr8232yahwyc4q29p27sppwk9t")
+    Address("component_tdx_2_1cp5dterg3fukyq6zuf0xg3wwlu9q97cp689eq6rc50dc92qt2h88kc")
     "buy_nft"
     0u64
-    10u32
+    5u32
     Bucket("bucket1")
 ;
 CALL_METHOD
-    Address("account_sim1c83r6qw6jsqq2dw37l0uhf0ndp87qw27t6x8p53k0h3e2v2ea2mekw")
+    Address("account_tdx_2_128ykyg4ty8qqtlv5m0u2kd0te6f447q57ryvqsd2ewjethjam8vw9s")
     "try_deposit_batch_or_refund"
     Expression("ENTIRE_WORKTOP")
     Enum<0u8>()

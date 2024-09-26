@@ -14,6 +14,7 @@ mod solarix {
             create_fractionalized_asset => restrict_to: [OWNER];
             deposit_earnings => restrict_to: [OWNER];
             claim_earnings => PUBLIC;
+            claim_fees => restrict_to: [OWNER];
         }
     }
 
@@ -21,8 +22,9 @@ mod solarix {
         non_fungible_vaults: HashMap<u64, NonFungibleVault>, // Maps panel ids to non fungible vaults containing their NFTs
         panels: HashMap<u64, Panel>, // Maps panel ids to their respective panel struct
         earnings_vaults_maps: HashMap<u64, HashMap<NonFungibleLocalId, Vault>>, // Maps panel ids to their respective earnings vaults
-        payout_vaults: HashMap<ComponentAddress, Vault>, // Maps accounts to their respective payout vaults
+        payout_vaults: HashMap<u64, Vault>, // Maps accounts to their respective payout vaults
         protocol_collected_fees: Vault, // Vault containing fees collected by the protocol
+        panel_badges_map: HashMap<u64, ResourceAddress>, // Maps panel ids to their respective panel owner badge resource address
         admin_badge_address: ResourceAddress,
         id_counter: u64,
         buy_nft_fee: Decimal, // fee to be applied when buying 
@@ -47,6 +49,7 @@ mod solarix {
                     panels: HashMap::new(),
                     earnings_vaults_maps: HashMap::new(),
                     payout_vaults: HashMap::new(),
+                    panel_badges_map: HashMap::new(),
                     protocol_collected_fees: Vault::new(XRD),
                     admin_badge_address: admin_badge.resource_address(),
                     id_counter: 0,
@@ -61,9 +64,13 @@ mod solarix {
 
         }
 
-        pub fn create_fractionalized_asset(&mut self, owner_address: ComponentAddress, price_per_nft: Decimal, total_supply: u64) -> u64 {
+        pub fn create_fractionalized_asset(&mut self, owner_address: ComponentAddress, price_per_nft: Decimal, total_supply: u64) -> (u64, NonFungibleBucket)  {
             let panel_id = self._get_next_id_and_increment();
-            let (_panel, nft_bucket) = Panel::new(
+            let (
+                _panel,
+                nft_bucket,
+                panel_owner_badge,
+            ) = Panel::new(
                 panel_id,
                 owner_address,
                 price_per_nft,
@@ -73,8 +80,9 @@ mod solarix {
             self.non_fungible_vaults.insert(panel_id, NonFungibleVault::with_bucket(nft_bucket));
             self.panels.insert(panel_id, _panel);
             self.earnings_vaults_maps.insert(panel_id, HashMap::new());
-            self.payout_vaults.insert(owner_address, Vault::new(XRD));
-            panel_id
+            self.payout_vaults.insert(panel_id, Vault::new(XRD));
+            self.panel_badges_map.insert(panel_id, panel_owner_badge.resource_address());
+            (panel_id, panel_owner_badge)
         }
 
         fn _get_next_id_and_increment(&mut self) -> u64 {
@@ -106,7 +114,7 @@ mod solarix {
                 available: nfts_ids.len().to_u32().unwrap()
             });
 
-            let payout_vault: &mut Vault = self.payout_vaults.get_mut(&_panel.payment_receiver).unwrap();
+            let payout_vault: &mut Vault = self.payout_vaults.get_mut(&panel_id).unwrap();
             let mut coins_to_pay: Bucket = payment.take(_panel.price_per_nft * quantity);
             let nft = vault.take_non_fungibles(&nfts_ids);
 
@@ -147,8 +155,7 @@ mod solarix {
             let asset = self.panels.get(&panel_id).unwrap();
 
             assert!(nft_proof.resource_address() == asset.nft_resource_address, "{}", MyError::NotAuthorizedToClaimEarningsError);
-            
-            let checked_nft: CheckedNonFungibleProof = nft_proof.check_with_message(asset.nft_resource_address, "Invalid proof");
+            let checked_nft: CheckedNonFungibleProof = nft_proof.check(asset.nft_resource_address);
 
             let vault_map = self.earnings_vaults_maps.get_mut(&panel_id).unwrap();
             let vault: &mut Vault = vault_map.get_mut(&checked_nft.non_fungible_local_id()).unwrap();
@@ -156,11 +163,16 @@ mod solarix {
             vault.take_all()
         }
 
-        pub fn claim_sales_proceeds(&mut self, account: Global<Account>) -> Bucket {
-            Runtime::assert_access_rule(account.get_owner_role().rule);
-            assert!(self.payout_vaults.contains_key(&account.address()), "{}", MyError::NotAuthorizedToClaimSalesProceedsError);
-            let vault = self.payout_vaults.get_mut(&account.address()).unwrap();
+        pub fn claim_sales_proceeds(&mut self, panel_id: u64, owner_badge_proof: NonFungibleProof) -> Bucket {
+            assert!(owner_badge_proof.resource_address() == *self.panel_badges_map.get(&panel_id).unwrap(), "{}", MyError::NotAuthorizedToClaimProceedsError);
+
+            assert!(self.payout_vaults.contains_key(&panel_id), "{}", MyError::NotAuthorizedToClaimSalesProceedsError);
+            let vault = self.payout_vaults.get_mut(&panel_id).unwrap();
             vault.take_all()
+        }
+
+        pub fn claim_fees( &mut self) -> Bucket {
+            self.protocol_collected_fees.take_all()
         }
     }
 }
