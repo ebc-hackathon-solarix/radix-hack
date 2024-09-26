@@ -61,15 +61,15 @@ mod solarix {
 
         }
 
-        // Not tested, please check.
         pub fn create_fractionalized_asset(&mut self, owner_address: ComponentAddress, price_per_nft: Decimal, total_supply: u64) -> u64 {
             let panel_id = self._get_next_id_and_increment();
-            let (_panel, nft_bucket, _panel_owner_badge) = Panel::new(
+            let (_panel, nft_bucket) = Panel::new(
                 panel_id,
                 owner_address,
                 price_per_nft,
                 total_supply
             );
+
             self.non_fungible_vaults.insert(panel_id, NonFungibleVault::with_bucket(nft_bucket));
             self.panels.insert(panel_id, _panel);
             self.earnings_vaults_maps.insert(panel_id, HashMap::new());
