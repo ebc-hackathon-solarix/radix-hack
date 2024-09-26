@@ -84,7 +84,10 @@ mod solarix {
         }
 
         pub fn buy_nft(&mut self, panel_id: u64, quantity: u32, mut payment: Bucket) -> (NonFungibleBucket, Bucket) {
-            assert!(self.panels.contains_key(&panel_id), "Asset not found");
+
+            assert!(self.panels.contains_key(&panel_id), "{}", MyError::AssetNotFound);
+
+            
             let _panel = self.panels.get(&panel_id).unwrap();
             let vault: &mut NonFungibleVault = self.non_fungible_vaults.get_mut(&panel_id).unwrap();
             let expected_amount = _panel.price_per_nft * quantity;
@@ -94,11 +97,14 @@ mod solarix {
                 found: payment.amount()
             });
     
-            assert!(!vault.is_empty(), "Non fungible vault is empty");
+            assert!(!vault.is_empty(), "{}", MyError::NonFungibleVaultEmptyError);
 
             let nfts_ids = vault.as_non_fungible().non_fungible_local_ids(quantity);
 
-            assert!(nfts_ids.len().to_u32().unwrap() >= quantity, "Not enough NFTs to buy");
+            assert!(nfts_ids.len().to_u32().unwrap() >= quantity, "{}", MyError::InsufficientSupply {
+                requested: quantity,
+                available: nfts_ids.len().to_u32().unwrap()
+            });
 
             let payout_vault: &mut Vault = self.payout_vaults.get_mut(&_panel.payment_receiver).unwrap();
             let mut coins_to_pay: Bucket = payment.take(_panel.price_per_nft * quantity);
@@ -120,7 +126,7 @@ mod solarix {
         }
 
         pub fn deposit_earnings(&mut self, panel_id: u64, mut earnings: Bucket) {
-            assert!(self.non_fungible_vaults.get(&panel_id).unwrap().is_empty(), "Non fungible vault not empty, NFTs must be purchased before earnings can be deposited");
+            assert!(self.non_fungible_vaults.get(&panel_id).unwrap().is_empty(), "{}", MyError::NonFungibleVaultNotEmptyError);
 
             let accrued_fee_amount = earnings.amount() * self.earnings_fee;
             self.protocol_collected_fees.put(earnings.take(accrued_fee_amount));
@@ -135,9 +141,12 @@ mod solarix {
         }
 
         pub fn claim_earnings(&mut self, panel_id: u64, nft_proof: NonFungibleProof) -> Bucket {
-            assert!(self.panels.contains_key(&panel_id), "Asset not found");
+            assert!(self.panels.contains_key(&panel_id), "{}", MyError::AssetNotFound);
 
             let asset = self.panels.get(&panel_id).unwrap();
+
+            assert!(nft_proof.resource_address() == asset.nft_resource_address, "{}", MyError::NotAuthorizedToClaimPayoutError);
+            
             let checked_nft: CheckedNonFungibleProof = nft_proof.check_with_message(asset.nft_resource_address, "Invalid proof");
 
             let vault_map = self.earnings_vaults_maps.get_mut(&panel_id).unwrap();
@@ -148,7 +157,7 @@ mod solarix {
 
         pub fn claim_sales_proceeds(&mut self, account: Global<Account>) -> Bucket {
             Runtime::assert_access_rule(account.get_owner_role().rule);
-            assert!(self.payout_vaults.contains_key(&account.address()), "NOT ALLOWED TO CLAIM PAYOUT");
+            assert!(self.payout_vaults.contains_key(&account.address()), "{}", MyError::NotAuthorizedToClaimPayoutError);
             let vault = self.payout_vaults.get_mut(&account.address()).unwrap();
             vault.take_all()
         }

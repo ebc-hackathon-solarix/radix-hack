@@ -24,6 +24,12 @@ pub enum MyError {
         available: u32,
     },
 
+    #[error("Non fungible vault not empty, all NFTs must be purchased before earnings can be deposited")]
+    NonFungibleVaultNotEmptyError,
+
+    #[error("Non fungible vault is empty")]
+    NonFungibleVaultEmptyError,
+
     #[error("Not authorized to claim earnings" )]
     NotAuthorizedToClaimEarningsError,
 
@@ -32,5 +38,10 @@ pub enum MyError {
 
     #[error("Not authorized to deposit earnings" )]
     NotAuthorizedToDepositEarningsError,
+
+    #[error("Asset not found" )]
+    AssetNotFound
+
+
 
 }
