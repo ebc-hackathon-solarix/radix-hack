@@ -34,7 +34,7 @@ pub enum MyError {
     NotAuthorizedToClaimEarningsError,
 
     #[error("Not authorized to claim payout" )]
-    NotAuthorizedToClaimPayoutError,
+    NotAuthorizedToClaimSalesProceedsError,
 
     #[error("Not authorized to deposit earnings" )]
     NotAuthorizedToDepositEarningsError,
