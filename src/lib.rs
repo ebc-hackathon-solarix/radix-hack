@@ -164,8 +164,3 @@ mod solarix {
     }
 }
 
-
-// Account component address: account_sim1cyevcrus703e80qmpajx2rmaz2dtpgs4uf8ad27rk3t8h5spc447dg
-// Public key: 030859c0b35475112ca57b093dfbc7ddc90f78309bce921d7bc8e87d3ce25c4631
-// Private key: 76da662395b91c76385a78cd14f861b1e05f8f9747c20075b2ce346a8c433208
-// Owner badge: resource_sim1ntw9nnvkmahl0ndnp6smx6vp5vec9qyw86vkkmetvuqc0jw756ynr5:#1#
