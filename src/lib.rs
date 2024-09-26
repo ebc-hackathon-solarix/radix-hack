@@ -125,7 +125,7 @@ mod solarix {
             (nft, payment)
         }
 
-        pub fn deposit_earnings(&mut self, panel_id: u64, mut earnings: Bucket) {
+        pub fn deposit_earnings(&mut self, panel_id: u64, mut earnings: Bucket) -> Bucket {
             assert!(self.non_fungible_vaults.get(&panel_id).unwrap().is_empty(), "{}", MyError::NonFungibleVaultNotEmptyError);
 
             let accrued_fee_amount = earnings.amount() * self.earnings_fee;
@@ -138,6 +138,7 @@ mod solarix {
             vault_map.iter_mut().for_each(|(_nft_id, vault)| {
                 vault.put(earnings.take(amount_to_deposit));
             });
+            earnings
         }
 
         pub fn claim_earnings(&mut self, panel_id: u64, nft_proof: NonFungibleProof) -> Bucket {
