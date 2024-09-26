@@ -7,6 +7,8 @@ use crate::errors::MyError;
 
 #[blueprint]
 mod solarix {
+    use std::ops::Index;
+
     enable_method_auth! {
         methods {
             buy_nft => PUBLIC;
@@ -15,6 +17,7 @@ mod solarix {
             deposit_earnings => restrict_to: [OWNER];
             claim_earnings => PUBLIC;
             claim_fees => restrict_to: [OWNER];
+            get_available_nfts => PUBLIC;
         }
     }
 
@@ -173,6 +176,11 @@ mod solarix {
 
         pub fn claim_fees( &mut self) -> Bucket {
             self.protocol_collected_fees.take_all()
+        }
+
+        pub fn get_available_nfts(&self, panel_id: u64) -> IndexSet<NonFungibleLocalId> {
+            let v = self.non_fungible_vaults.get(&panel_id).unwrap().as_non_fungible();
+            v.non_fungible_local_ids(100)
         }
     }
 }
