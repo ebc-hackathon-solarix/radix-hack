@@ -83,16 +83,17 @@ mod solarix {
             id
         }
 
-        pub fn buy_nft(&mut self, panel_id: u64, quantity: u32, mut payment: Bucket) -> Result<(NonFungibleBucket, Bucket), MyError> {
+        pub fn buy_nft(&mut self, panel_id: u64, quantity: u32, mut payment: Bucket) -> (NonFungibleBucket, Bucket) {
             assert!(self.panels.contains_key(&panel_id), "Asset not found");
             let _panel = self.panels.get(&panel_id).unwrap();
             let vault: &mut NonFungibleVault = self.non_fungible_vaults.get_mut(&panel_id).unwrap();
+            let expected_amount = _panel.price_per_nft * quantity;
 
-            if payment.amount() >= (_panel.price_per_nft * quantity) {
-                let expected = _panel.price_per_nft * quantity;
-                return Err(MyError::InsufficientTokenAmount { expected, found: payment.amount() });
-            }
-
+            assert!(payment.amount() >= (_panel.price_per_nft * quantity), "{}", MyError::InsufficientTokenAmount {
+                expected: expected_amount,
+                found: payment.amount()
+            });
+    
             assert!(!vault.is_empty(), "Non fungible vault is empty");
 
             let nfts_ids = vault.as_non_fungible().non_fungible_local_ids(quantity);
@@ -115,7 +116,7 @@ mod solarix {
                 earnings_vault_map.insert(nft_id.clone(), Vault::new(XRD));
             });
 
-            Ok((nft, payment))
+            (nft, payment)
         }
 
         pub fn deposit_earnings(&mut self, panel_id: u64, mut earnings: Bucket) {
